@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | Smart City Traffic Communication Network</title>
+  <meta name="description" content="Authorized Sign-In Portal for Smart City Traffic Communication Network">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .login-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(14, 23, 54, 0.85);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(76, 201, 240, 0.25);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem 2rem;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(67, 97, 238, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--cyan), var(--blue), var(--emerald));
+    }
+
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .login-icon {
+      width: 60px;
+      height: 60px;
+      margin: 0 auto 1rem;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 0 25px rgba(76, 201, 240, 0.4);
+      animation: iconFloat 3s infinite ease-in-out;
+    }
+
+    @keyframes iconFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    .login-header h2 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      background: linear-gradient(to right, #FFFFFF, var(--cyan));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.02em;
+    }
+
+    .login-header p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .credentials-banner {
+      background: rgba(67, 97, 238, 0.08);
+      border: 1px solid rgba(76, 201, 240, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .credentials-info {
+      color: var(--text-main);
+      line-height: 1.4;
+    }
+
+    .credentials-info strong {
+      color: var(--cyan);
+      font-family: var(--font-mono);
+    }
+
+    .btn-quick-fill {
+      background: rgba(76, 201, 240, 0.15);
+      border: 1px solid rgba(76, 201, 240, 0.4);
+      color: var(--cyan);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.35rem 0.65rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: var(--transition);
+    }
+
+    .btn-quick-fill:hover {
+      background: var(--cyan);
+      color: #050814;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper input {
+      padding-right: 2.75rem;
+    }
+
+    .btn-toggle-pwd {
+      position: absolute;
+      right: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.25rem;
+      transition: var(--transition);
+    }
+
+    .btn-toggle-pwd:hover {
+      color: var(--cyan);
+    }
+
+    .alert-box {
+      display: none;
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      margin-bottom: 1.25rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .alert-error {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #FCA5A5;
+    }
+
+    .alert-success {
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #6EE7B7;
+    }
+  </style>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-header">
+        <div class="login-icon">🚦</div>
+        <h2>Smart City Traffic Control</h2>
+        <p>Authorized Network Operations & CNIP Monitoring Portal</p>
+      </div>
+
+      <!-- Quick Fill Credentials Banner -->
+      <div class="credentials-banner">
+        <div class="credentials-info">
+          <div>User: <strong>admin</strong></div>
+          <div>Pass: <strong>admin123</strong></div>
+        </div>
+        <button type="button" id="btnQuickFill" class="btn-quick-fill">⚡ Quick Fill</button>
+      </div>
+
+      <!-- Alert Box -->
+      <div id="loginAlert" class="alert-box alert-error"></div>
+
+      <!-- Form -->
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="username">Username / Operator ID</label>
+          <input 
+            type="text" 
+            id="username" 
+            class="form-input" 
+            placeholder="e.g. admin" 
+            required 
+            autocomplete="username"
+            value="admin"
+          >
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrapper">
+            <input 
+              type="password" 
+              id="password" 
+              class="form-input" 
+              placeholder="••••••••" 
+              required 
+              autocomplete="current-password"
+              value="admin123"
+            >
+            <button type="button" id="btnTogglePassword" class="btn-toggle-pwd" title="Show / Hide Password">👁</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; font-size:0.8rem; color:var(--text-muted);">
+          <label style="display:flex; align-items:center; gap:0.4rem; cursor:pointer;">
+            <input type="checkbox" id="rememberMe" checked style="accent-color:var(--cyan);">
+            Remember this session
+          </label>
+          <span style="color:var(--cyan); font-size:0.75rem;">CNIP Project v1.0</span>
+        </div>
+
+        <button type="submit" id="btnLoginSubmit" class="btn" style="width:100%; height:46px;">
+          <span>🚀 Sign In to Traffic Dashboard</span>
+        </button>
+      </form>
+
+      <div style="text-align:center; margin-top:1.5rem; font-size:0.75rem; color:var(--text-dim);">
+        <p>Computer Networks & Internet Protocols (CNIP) College Demonstration</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/api.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // If already logged in, redirect to index.html
+      if (localStorage.getItem('smartcity_user') || sessionStorage.getItem('smartcity_user')) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      const form = document.getElementById('loginForm');
+      const userInput = document.getElementById('username');
+      const passInput = document.getElementById('password');
+      const alertBox = document.getElementById('loginAlert');
+      const btnTogglePwd = document.getElementById('btnTogglePassword');
+      const btnQuickFill = document.getElementById('btnQuickFill');
+      const btnSubmit = document.getElementById('btnLoginSubmit');
+      const rememberCheckbox = document.getElementById('rememberMe');
+
+      // Quick Fill Demo Credentials
+      btnQuickFill.addEventListener('click', () => {
+        userInput.value = 'admin';
+        passInput.value = 'admin123';
+        userInput.focus();
+      });
+
+      // Show / Hide Password
+      btnTogglePwd.addEventListener('click', () => {
+        if (passInput.type === 'password') {
+          passInput.type = 'text';
+          btnTogglePwd.textContent = '🔒';
+        } else {
+          passInput.type = 'password';
+          btnTogglePwd.textContent = '👁';
+        }
+      });
+
+      // Submit Form
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = userInput.value.trim();
+        const password = passInput.value;
+
+        alertBox.style.display = 'none';
+        btnSubmit.disabled = true;
+        btnSubmit.innerHTML = '<span>⏳ Authenticating...</span>';
+
+        let success = false;
+        let userData = null;
+
+        try {
+          // Attempt authentication with Java backend
+          const resp = await window.ApiClient.post('/api/login', { username, password });
+          if (resp && resp.status === 'SUCCESS') {
+            success = true;
+            userData = resp;
+          }
+        } catch (err) {
+          console.log('Backend authentication failed or offline, checking local credentials.');
+        }
+
+        // Fallback / client-side check if backend offline or returned error
+        if (!success) {
+          if ((username.toLowerCase() === 'admin' && password === 'admin123') ||
+              (username.toLowerCase() === 'student' && password === 'password123') ||
+              (username.toLowerCase() === 'operator' && password === 'traffic2026')) {
+            success = true;
+            userData = {
+              username: username,
+              role: 'Traffic Operations Controller',
+              token: 'local_auth_token_' + Date.now()
+            };
+          }
+        }
+
+        if (success) {
+          alertBox.className = 'alert-box alert-success';
+          alertBox.textContent = `✓ Welcome, ${userData.username}! Access Granted. Redirecting...`;
+          alertBox.style.display = 'block';
+
+          const storage = rememberCheckbox.checked ? localStorage : sessionStorage;
+          storage.setItem('smartcity_user', JSON.stringify(userData));
+
+          setTimeout(() => {
+            window.location.href = 'index.html';
+          }, 600);
+        } else {
+          alertBox.className = 'alert-box alert-error';
+          alertBox.textContent = '✕ Invalid username or password. Default is: admin / admin123';
+          alertBox.style.display = 'block';
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = '<span>🚀 Sign In to Traffic Dashboard</span>';
+        }
+      });
+    });
+  </script>
+</body>
+</html>

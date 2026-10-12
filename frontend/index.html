@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart City Traffic Communication Network | CNIP Project</title>
+  <meta name="description" content="College CNIP Project simulating smart city traffic signal communication, Dijkstra shortest path, Distance Vector Routing, Leaky Bucket traffic shaping, Congestion analysis, and NS-2 simulation.">
+  <link rel="stylesheet" href="css/style.css">
+  <script>
+    // Immediate Auth Guard
+    const authSession = localStorage.getItem('smartcity_user') || sessionStorage.getItem('smartcity_user');
+    if (!authSession) {
+      window.location.href = 'login.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="ambient-glow"></div>
+
+  <!-- Header Navigation -->
+  <header class="header-container">
+    <div class="header-inner">
+      <div class="brand-wrapper">
+        <div class="brand-icon">🚦</div>
+        <div class="brand-text">
+          <h1>Smart City Traffic Communication Network</h1>
+          <p>Computer Networks & Internet Protocols (CNIP) Engineering Project</p>
+        </div>
+      </div>
+
+      <div class="header-status">
+        <div id="backendStatusBadge" class="badge-status offline">
+          <span class="pulse-dot"></span>
+          <span id="backendStatusText">Checking Backend...</span>
+        </div>
+        <div id="userProfileBadge" class="tag-pill" style="padding: 0.35rem 0.75rem; font-weight:600; color: #FFF; background: rgba(76, 201, 240, 0.12); border-color: rgba(76, 201, 240, 0.3);">
+          👤 <span id="currentUserName">admin</span>
+        </div>
+        <button id="btnSignOut" class="btn btn-secondary btn-sm" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+          🚪 Sign Out
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="header-inner" style="margin-top: 0.75rem;">
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" data-tab="tab-overview" role="tab" id="tabBtnOverview">
+          <span>🏙 Network Topology</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-dijkstra" role="tab" id="tabBtnDijkstra">
+          <span>🧭 Dijkstra Routing</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-dvr" role="tab" id="tabBtnDvr">
+          <span>🔄 Distance Vector Routing</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-leaky" role="tab" id="tabBtnLeaky">
+          <span>🚰 Leaky Bucket Shaper</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-congestion" role="tab" id="tabBtnCongestion">
+          <span>📊 Congestion & Throughput</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-agent" role="tab" id="tabBtnAgent">
+          <span>🤖 Autonomous Traffic Agent</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-ns2" role="tab" id="tabBtnNs2">
+          <span>💻 NS-2 Simulation Center</span>
+        </button>
+        <button class="tab-btn" data-tab="tab-docs" role="tab" id="tabBtnDocs">
+          <span>📚 Report & Viva Guide</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Application Body -->
+  <main class="main-wrapper">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: OVERVIEW & NETWORK TOPOLOGY -->
+    <!-- ========================================================================= -->
+    <section id="tab-overview" class="tab-content active" role="tabpanel">
+      <!-- KPI Metric Summary -->
+      <div class="kpi-grid">
+        <div class="kpi-card cyan">
+          <div class="kpi-icon">📍</div>
+          <div class="kpi-data">
+            <span class="kpi-label">Traffic Nodes</span>
+            <span class="kpi-value" id="kpiTotalNodes">8</span>
+            <span class="kpi-sub">Smart Signal Hubs</span>
+          </div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-icon">🚗</div>
+          <div class="kpi-data">
+            <span class="kpi-label">Connected Vehicles</span>
+            <span class="kpi-value" id="kpiTotalVehicles">314</span>
+            <span class="kpi-sub">Active V2I Transponders</span>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-icon">⚡</div>
+          <div class="kpi-data">
+            <span class="kpi-label">Data Throughput</span>
+            <span class="kpi-value" id="kpiThroughput">768 kbps</span>
+            <span class="kpi-sub">Backbone Channel</span>
+          </div>
+        </div>
+        <div class="kpi-card emerald">
+          <div class="kpi-icon">📈</div>
+          <div class="kpi-data">
+            <span class="kpi-label">Delivery Ratio (PDR)</span>
+            <span class="kpi-value" id="kpiPdr">98.2%</span>
+            <span class="kpi-sub">Telemetry Packets</span>
+          </div>
+        </div>
+        <div class="kpi-card amber">
+          <div class="kpi-icon">⏱</div>
+          <div class="kpi-data">
+            <span class="kpi-label">Avg Network Delay</span>
+            <span class="kpi-value" id="kpiDelay">13.4 ms</span>
+            <span class="kpi-sub">Queuing + Propagation</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Canvas & Info Split Grid -->
+      <div class="dashboard-grid">
+        <div class="card" style="padding: 1.25rem;">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="icon">🌐</span>
+              Smart City Interactive Communication Topology (Canvas)
+            </div>
+            <span class="tag-pill">Click Node to Inspect</span>
+          </div>
+
+          <div class="canvas-wrapper">
+            <canvas id="networkCanvas"></canvas>
+            <div class="canvas-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#10B981;"></span> Green Light / UDP</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#EF4444;"></span> Red Light / TCP</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> Yellow Light</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#4CC9F0;"></span> Shortest Path</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Details & Node Telemetry -->
+        <div style="display:flex; flex-direction:column; gap:1.25rem;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="icon">ℹ</span> Junction Telemetry</div>
+            </div>
+            <div id="selectedNodeInfo">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <h3 id="nodeInfoCode" style="font-size:1.4rem; color:var(--cyan);">J_A</h3>
+                <span id="nodeInfoSignal" class="badge badge-green">GREEN</span>
+              </div>
+              <p id="nodeInfoName" style="font-weight:600; margin-bottom:0.5rem; color:#fff;">Junction A - Central Hub</p>
+              <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.7;">
+                <div>Type: <strong id="nodeInfoType" style="color:#CBD5E1;">Central City Hub</strong></div>
+                <div>Vehicles: <strong id="nodeInfoVehicles" style="color:#CBD5E1;">45 vehicles</strong></div>
+                <div>Queue Buffer: <strong id="nodeInfoQueue" style="color:#CBD5E1;">5 packets in buffer</strong></div>
+                <div>Links: <strong style="color:#CBD5E1;">3 Duplex Links (100Mbps)</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="icon">📡</span> Network Protocol Architecture</div>
+            </div>
+            <div style="font-size:0.85rem; color:var(--text-muted); line-height:1.6;">
+              <p><strong>Application Layer:</strong> Vehicle Telemetry (CBR) & Traffic Signal Controller Protocol.</p>
+              <p style="margin-top:0.4rem;"><strong>Transport Layer:</strong> UDP for sensor feeds, TCP for signal command synchronization.</p>
+              <p style="margin-top:0.4rem;"><strong>Network Layer:</strong> Dijkstra SPF & Distance Vector Routing (Bellman-Ford).</p>
+              <p style="margin-top:0.4rem;"><strong>Traffic Shaping:</strong> Leaky Bucket packet regulation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: DIJKSTRA SHORTEST PATH -->
+    <!-- ========================================================================= -->
+    <section id="tab-dijkstra" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🧭</span> Dijkstra's Shortest Path Algorithm</div>
+          <span class="tag-pill">Routing Optimization</span>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+          Calculates the lowest-cost, minimum-latency communication path between smart traffic intersections using a greedy shortest-path tree.
+        </p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:1.25rem; align-items:end;">
+          <div class="form-group">
+            <label class="form-label" for="dijkstraSource">Source Intersection</label>
+            <select id="dijkstraSource" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dijkstraDest">Destination Intersection</label>
+            <select id="dijkstraDest" class="form-select"></select>
+          </div>
+          <div class="form-group">
+            <button id="btnCalculateDijkstra" class="btn" style="width:100%; height:44px;">
+              <span>⚡ Compute Shortest Route</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Box -->
+        <div id="dijkstraResultContainer" style="display:none; margin-top:1.5rem;">
+          <div class="card" style="background: rgba(67, 97, 238, 0.1); border-color: var(--border-active);">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem;">
+              <div>
+                <span class="kpi-label">Optimal Route</span>
+                <div id="resShortestPath" style="font-size:1.2rem; font-weight:800; color:var(--cyan); margin-top:0.25rem;">—</div>
+              </div>
+              <div>
+                <span class="kpi-label">Total Distance / Cost</span>
+                <div id="resTotalDistance" style="font-size:1.2rem; font-weight:800; color:#fff; margin-top:0.25rem;">—</div>
+              </div>
+              <div>
+                <span class="kpi-label">Estimated Latency</span>
+                <div id="resEstimatedLatency" style="font-size:1.2rem; font-weight:800; color:var(--emerald); margin-top:0.25rem;">—</div>
+              </div>
+              <div>
+                <span class="kpi-label">Time Complexity</span>
+                <div id="resComplexity" style="font-size:0.95rem; font-weight:700; color:#CBD5E1; margin-top:0.25rem;">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.5rem;">
+            <h4 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">Algorithm Step-by-Step Execution Trace</h4>
+            <div class="table-container">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th style="width:70px;">Step</th>
+                    <th style="width:160px;">Visited Node</th>
+                    <th>Tentative Distance Array [J_A to J_H]</th>
+                    <th>Relaxation Action & Details</th>
+                  </tr>
+                </thead>
+                <tbody id="dijkstraTraceTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: DISTANCE VECTOR ROUTING -->
+    <!-- ========================================================================= -->
+    <section id="tab-dvr" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🔄</span> Distance Vector Routing (Bellman-Ford Algorithm)</div>
+          <span class="tag-pill">Distributed Routing</span>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">
+          Each router maintains a vector of minimum distances to all network destinations. Nodes iteratively exchange routing vectors using the Bellman-Ford equation:
+          <code style="color:var(--cyan); font-weight:700; background:rgba(76,201,240,0.1); padding:2px 8px; border-radius:4px;">D_x(y) = min_v { c(x, v) + D_v(y) }</code>
+        </p>
+
+        <!-- Interactive Link Modifier -->
+        <div class="card" style="background: rgba(14,23,54,0.6); margin-bottom:1.5rem;">
+          <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:1rem; color:var(--cyan);">Interactive Link Cost & Failure Simulator</h4>
+          <div style="display:grid; grid-template-columns: 2fr 1fr 1fr 1.5fr 1fr; gap:1rem; align-items:end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Select Road Link</label>
+              <select id="dvrLinkSelect" class="form-select"></select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">New Metric / Cost (km)</label>
+              <input type="number" id="dvrNewCost" class="form-input" min="1" max="50" value="4">
+            </div>
+            <div class="form-group" style="margin-bottom:0; display:flex; flex-direction:column; justify-content:center;">
+              <label class="form-label">Link Status</label>
+              <label style="display:flex; align-items:center; gap:0.5rem; font-size:0.85rem; cursor:pointer; height:42px;">
+                <input type="checkbox" id="dvrLinkActive" checked style="accent-color:var(--cyan);"> Active
+              </label>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <button id="btnUpdateDvrLink" class="btn" style="width:100%; height:42px;">
+                <span>Apply Link Change</span>
+              </button>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <button id="btnResetDvr" class="btn btn-secondary" style="width:100%; height:42px;">
+                <span>Reset</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Convergence Log -->
+        <div style="margin-bottom:1.5rem;">
+          <h4 style="font-size:0.95rem; font-weight:700; margin-bottom:0.6rem;">DVR Convergence Iterations Log</h4>
+          <div id="dvrLogContainer" class="card" style="padding:0.75rem; max-height:160px; overflow-y:auto;"></div>
+        </div>
+
+        <!-- Routing Tables Grid -->
+        <h4 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">Routing Tables for All 8 Network Nodes</h4>
+        <div id="dvrTablesContainer" class="routing-grid"></div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 4: LEAKY BUCKET TRAFFIC SHAPER -->
+    <!-- ========================================================================= -->
+    <section id="tab-leaky" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🚰</span> Leaky Bucket Algorithm (Traffic Shaping)</div>
+          <span class="tag-pill">Congestion Control</span>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+          Buffers bursty incoming vehicle telemetry packets into a fixed-capacity queue and releases them at a smoothed, constant output rate (CBR). Any burst that exceeds the bucket capacity is dropped to protect downstream routers.
+        </p>
+
+        <!-- Metric KPI Banner -->
+        <div class="kpi-grid" style="margin-bottom:1.5rem;">
+          <div class="kpi-card cyan">
+            <div class="kpi-icon">📥</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Packets Arrived</span>
+              <span class="kpi-value" id="lbDispArrived">0</span>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon">✓</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Accepted Packets</span>
+              <span class="kpi-value" id="lbDispAccepted">0</span>
+            </div>
+          </div>
+          <div class="kpi-card rose">
+            <div class="kpi-icon">✕</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Dropped (Overflow)</span>
+              <span class="kpi-value" id="lbDispDropped">0</span>
+            </div>
+          </div>
+          <div class="kpi-card amber">
+            <div class="kpi-icon">🪣</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Current Buffer Level</span>
+              <span class="kpi-value" id="lbDispCurrentLevel">0 / 20</span>
+              <span class="kpi-sub" id="lbDispOccupancy">0% Occupied</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls & Interactive Visualizer Split -->
+        <div class="bucket-simulator-grid">
+          <!-- Left: Controls & Visual Bucket -->
+          <div class="card" style="display:flex; flex-direction:column; gap:1.25rem;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="lbCapacity">Bucket Capacity (pkts)</label>
+                <input type="number" id="lbCapacity" class="form-input" min="5" max="50" value="20">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" for="lbLeakRate">Leak / Outflow Rate (pkts/s)</label>
+                <input type="number" id="lbLeakRate" class="form-input" min="1" max="10" value="4">
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="lbArrivalPattern">Arrival Traffic Pattern</label>
+              <select id="lbArrivalPattern" class="form-select">
+                <option value="BURSTY">Bursty Traffic (Spikes of 12-20 packets)</option>
+                <option value="STEADY">Steady Traffic (4-5 packets/sec)</option>
+                <option value="HEAVY">Sustained Congestion (14-20 packets/sec)</option>
+              </select>
+            </div>
+
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+              <button id="btnLbStart" class="btn" style="flex:1;">
+                <span>▶ Start Simulation</span>
+              </button>
+              <button id="btnLbSendBurst" class="btn btn-secondary">
+                <span>⚡ Send Bursty Traffic</span>
+              </button>
+              <button id="btnLbReset" class="btn btn-secondary">
+                <span>Reset</span>
+              </button>
+            </div>
+
+            <!-- Visual Physical Bucket Tank -->
+            <div class="bucket-visual-area">
+              <div class="water-tap"></div>
+              <div class="incoming-flow-stream"></div>
+              <div class="bucket-tank">
+                <div id="lbWaterFill" class="bucket-water">
+                  <div class="bucket-water-surface"></div>
+                </div>
+                <div class="bucket-leak-spout"></div>
+              </div>
+              <div class="outgoing-flow-stream"></div>
+              <div id="lbOverflowAlert" class="bucket-overflow-drop">⚠ Overflow! Packets Dropped</div>
+            </div>
+          </div>
+
+          <!-- Right: Charts & Timeline Table -->
+          <div class="card" style="display:flex; flex-direction:column; gap:1rem;">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--cyan);">Traffic Shaping: Bursty Inflow vs Constant Leak Outflow</h4>
+            <div style="background:#050814; border-radius:var(--radius-sm); padding:0.5rem; border:1px solid var(--border-subtle);">
+              <canvas id="lbChartCanvas" height="220"></canvas>
+            </div>
+
+            <h4 style="font-size:0.95rem; font-weight:700; margin-top:0.5rem;">Step-by-Step Second-by-Second Execution Table</h4>
+            <div class="table-container" style="max-height:220px; overflow-y:auto; margin-top:0;">
+              <table class="custom-table">
+                <thead>
+                  <tr>
+                    <th>Time</th>
+                    <th>Inflow</th>
+                    <th>Accepted</th>
+                    <th>Dropped</th>
+                    <th>Transmitted</th>
+                    <th>Queue Level</th>
+                  </tr>
+                </thead>
+                <tbody id="lbTimelineTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 5: CONGESTION & THROUGHPUT ANALYSIS -->
+    <!-- ========================================================================= -->
+    <section id="tab-congestion" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">📊</span> Network Congestion & Performance Analysis</div>
+          <span class="tag-pill">CNIP Performance Metrics</span>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.25rem;">
+          Simulates network behavior under varying vehicle communication loads. Evaluates queue buildup, buffer overflow, and calculates exact CNIP metrics.
+        </p>
+
+        <!-- Traffic Preset Selectors & Controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button id="btnTrafficLow" class="btn btn-secondary btn-sm">Low Traffic (Uncongested)</button>
+            <button id="btnTrafficMed" class="btn btn-secondary btn-sm active">Medium Traffic (Moderate)</button>
+            <button id="btnTrafficHigh" class="btn btn-secondary btn-sm">High Traffic (Congested)</button>
+            <button id="btnTrafficExtreme" class="btn btn-secondary btn-sm btn-danger">Extreme (Collapse)</button>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button id="btnCongestionStart" class="btn btn-sm">▶ Start Run</button>
+            <button id="btnCongestionPause" class="btn btn-secondary btn-sm" disabled>⏸ Pause</button>
+            <button id="btnCongestionReset" class="btn btn-secondary btn-sm">Reset</button>
+            <button id="btnExportCsv" class="btn btn-secondary btn-sm">📥 Export CSV</button>
+          </div>
+        </div>
+
+        <!-- CNIP Mathematical Formulas Box -->
+        <div class="callout" style="margin-bottom:1.5rem;">
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:0.75rem; font-size:0.83rem;">
+            <div><strong>• Packet Loss Rate (%)</strong> = <code>(Packets Lost / Packets Sent) × 100</code></div>
+            <div><strong>• Throughput (bps)</strong> = <code>Successfully Received Bits / Simulation Time</code></div>
+            <div><strong>• Packet Delivery Ratio (PDR)</strong> = <code>(Packets Received / Packets Sent) × 100</code></div>
+            <div><strong>• Average Delay</strong> = <code>Total Queuing & Propagation Delay / Received Packets</code></div>
+          </div>
+        </div>
+
+        <!-- Metrics KPI Cards -->
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-icon">📤</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Packets Sent</span>
+              <span class="kpi-value" id="cgDispSent">0</span>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon">📥</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Packets Received</span>
+              <span class="kpi-value" id="cgDispReceived">0</span>
+            </div>
+          </div>
+          <div class="kpi-card rose">
+            <div class="kpi-icon">✕</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Packets Lost</span>
+              <span class="kpi-value" id="cgDispLost">0</span>
+              <span class="kpi-sub" id="cgDispLossRate">0.00%</span>
+            </div>
+          </div>
+          <div class="kpi-card cyan">
+            <div class="kpi-icon">⚡</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Throughput</span>
+              <span class="kpi-value" id="cgDispThroughput">0.0 kbps</span>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon">🎯</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Delivery Ratio (PDR)</span>
+              <span class="kpi-value" id="cgDispPdr">100.0%</span>
+            </div>
+          </div>
+          <div class="kpi-card amber">
+            <div class="kpi-icon">⏱</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Average Delay</span>
+              <span class="kpi-value" id="cgDispDelay">0.0 ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Graphs -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:1.25rem; margin-top:1.5rem;">
+          <div class="card" style="padding:1rem;">
+            <h4 style="font-size:0.9rem; font-weight:700; color:var(--cyan); margin-bottom:0.5rem;">Throughput (kbps) vs Time</h4>
+            <div class="chart-container"><canvas id="chartThroughputCanvas"></canvas></div>
+          </div>
+          <div class="card" style="padding:1rem;">
+            <h4 style="font-size:0.9rem; font-weight:700; color:var(--amber); margin-bottom:0.5rem;">Queue Buffer Length & Packet Drops</h4>
+            <div class="chart-container"><canvas id="chartLossQueueCanvas"></canvas></div>
+          </div>
+          <div class="card" style="padding:1rem;">
+            <h4 style="font-size:0.9rem; font-weight:700; color:var(--emerald); margin-bottom:0.5rem;">End-to-End Latency / Delay (ms)</h4>
+            <div class="chart-container"><canvas id="chartDelayCanvas"></canvas></div>
+          </div>
+          <div class="card" style="padding:1rem;">
+            <h4 style="font-size:0.9rem; font-weight:700; margin-bottom:0.5rem;">Active Congestion State</h4>
+            <div style="padding:1.5rem; display:flex; flex-direction:column; gap:1rem;">
+              <div>
+                <span class="kpi-label">Congestion Status</span>
+                <div style="margin-top:0.3rem;"><span id="cgDispStatus" class="badge badge-green">OPTIMAL</span></div>
+              </div>
+              <div>
+                <span class="kpi-label">Critical Bottleneck Node</span>
+                <div id="cgDispBottleneck" style="font-size:1.1rem; font-weight:700; color:#fff; margin-top:0.3rem;">None (Uncongested)</div>
+              </div>
+              <div>
+                <span class="kpi-label">Buffer Occupancy</span>
+                <div id="cgDispQueue" style="font-size:1.1rem; font-weight:700; color:var(--cyan); margin-top:0.3rem;">0%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabular Results Table -->
+        <div style="margin-top:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">Time-Series Evaluation Log</h4>
+          <div class="table-container" style="max-height:240px; overflow-y:auto;">
+            <table class="custom-table">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Load Level</th>
+                  <th>Sent</th>
+                  <th>Received</th>
+                  <th>Lost</th>
+                  <th>Throughput</th>
+                  <th>Delay</th>
+                  <th>Queue Length</th>
+                </tr>
+              </thead>
+              <tbody id="congestionResultsTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB: AUTONOMOUS TRAFFIC AGENT -->
+    <!-- ========================================================================= -->
+    <section id="tab-agent" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">🤖</span> Sentinel Autonomous Traffic Control & Routing Agent</div>
+          <span id="agentStatusBadge" class="badge badge-green">AGENT ACTIVE (AUTONOMOUS)</span>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-muted); margin-bottom:1.5rem;">
+          The Sentinel-Agent continuously surveys queue buildup, packet loss rates, and vehicle density across all 8 intersections. It executes autonomous corrective actions: dynamically extending green signal durations, recalculating low-latency bypass paths using Dijkstra's algorithm, and throttling bursty inflows via Leaky Bucket rate limiters.
+        </p>
+
+        <!-- Agent Top Controls & Status Bar -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.5rem;">
+          <div style="display:flex; gap:0.75rem; align-items:center;">
+            <button id="btnToggleAgent" class="btn btn-secondary btn-sm">⏸ Pause Agent (Manual Mode)</button>
+            <button id="btnTriggerAgentIntervention" class="btn btn-sm">⚡ Simulate Bottleneck & Trigger Agent Actions</button>
+          </div>
+          <span class="tag-pill">Supervisory Interval: 2.0s</span>
+        </div>
+
+        <!-- Agent KPI Grid -->
+        <div class="kpi-grid" style="margin-bottom:1.5rem;">
+          <div class="kpi-card cyan">
+            <div class="kpi-icon">🧠</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Agent State</span>
+              <span class="kpi-value" id="agentStateText" style="font-size:1.1rem; color:var(--cyan);">MONITORING OPTIMAL</span>
+              <span class="kpi-sub">Continuous Loop</span>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon">🎯</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Total Actions Taken</span>
+              <span class="kpi-value" id="agentInterventionsCount">6</span>
+              <span class="kpi-sub">Mitigations Dispatched</span>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon">🧭</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Dynamic Reroutes</span>
+              <span class="kpi-value" id="agentReroutesCount">2</span>
+              <span class="kpi-sub">Dijkstra Detours</span>
+            </div>
+          </div>
+          <div class="kpi-card amber">
+            <div class="kpi-icon">🚦</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Signal Overrides</span>
+              <span class="kpi-value" id="agentSignalOverridesCount">3</span>
+              <span class="kpi-sub">Green Phase Extended</span>
+            </div>
+          </div>
+          <div class="kpi-card emerald">
+            <div class="kpi-icon">📉</div>
+            <div class="kpi-data">
+              <span class="kpi-label">Queue Reduction</span>
+              <span class="kpi-value" id="agentReductionText">41.2%</span>
+              <span class="kpi-sub">Average Relief</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dual Column: Directives vs Decision Feed -->
+        <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:1.5rem;">
+          <!-- Left: Agent Rules & Directives -->
+          <div class="card" style="background:rgba(14,23,54,0.6);">
+            <h4 style="font-size:0.95rem; font-weight:700; color:var(--cyan); margin-bottom:1rem;">Agent Autonomous Policies</h4>
+            <div style="display:flex; flex-direction:column; gap:0.85rem; font-size:0.84rem; line-height:1.6;">
+              <div style="padding:0.75rem; background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); border-left:3px solid var(--emerald);">
+                <strong style="color:#FFF;">1. Adaptive Green Extension (Queue > 12 pkts)</strong>
+                <p style="color:var(--text-muted); margin-top:0.2rem;">When intersection buffers exceed 25% capacity, the agent overrides the fixed cycle and adds +15s to the GREEN signal to drain the queue before packet drops occur.</p>
+              </div>
+
+              <div style="padding:0.75rem; background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); border-left:3px solid var(--cyan);">
+                <strong style="color:#FFF;">2. Dynamic Dijkstra Reroute (Link Load > 80%)</strong>
+                <p style="color:var(--text-muted); margin-top:0.2rem;">If a direct arterial link between intersections saturates, the agent recalculates the shortest path avoiding the bottleneck and broadcasts update vectors to adjacent routers.</p>
+              </div>
+
+              <div style="padding:0.75rem; background:rgba(255,255,255,0.03); border-radius:var(--radius-sm); border-left:3px solid var(--amber);">
+                <strong style="color:#FFF;">3. Leaky Bucket Rate Throttling (Inflow Storms)</strong>
+                <p style="color:var(--text-muted); margin-top:0.2rem;">Upon detecting bursty vehicular packet spikes, the agent dynamically clamps the inflow rate to a safe 4 pkts/s CBR output, preventing downstream DropTail overflow.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Live Decision Feed -->
+          <div class="card" style="background:rgba(14,23,54,0.6);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+              <h4 style="font-size:0.95rem; font-weight:700; color:#FFF;">Autonomous Decision & Action Feed</h4>
+              <span class="tag-pill">Live Chronological Log</span>
+            </div>
+            <div id="agentDecisionFeed" style="max-height:360px; overflow-y:auto; padding-right:0.25rem;"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 6: NS-2 SIMULATION CENTER -->
+    <!-- ========================================================================= -->
+    <section id="tab-ns2" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">💻</span> NS-2 (Network Simulator 2) Simulation Center</div>
+          <span class="tag-pill">Tcl Scripts & AWK Analysis</span>
+        </div>
+
+        <div class="callout success">
+          <strong>Note on Simulation Architecture:</strong> NS-2 runs natively on Linux (Ubuntu / Debian / WSL 2). Below are the production-grade Tcl simulation scripts, AWK metric analyzers, and an interactive trace file evaluator that parses NS-2 <code>.tr</code> files in real time.
+        </div>
+
+        <!-- Script Viewer & Download Controls -->
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1rem;">
+          <div style="display:flex; align-items:center; gap:0.75rem;">
+            <label class="form-label" style="margin-bottom:0;" for="ns2ScriptType">Select Script File:</label>
+            <select id="ns2ScriptType" class="form-select" style="width:260px;">
+              <option value="wired">traffic_smart_city_wired.tcl (Wired Grid)</option>
+              <option value="wireless">traffic_smart_city_wireless.tcl (VANET / 802.11)</option>
+              <option value="throughputAwk">scripts/throughput.awk (Throughput)</option>
+              <option value="lossAwk">scripts/packet_loss.awk (PDR & Loss)</option>
+              <option value="delayAwk">scripts/delay.awk (Latency Analysis)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:0.5rem;">
+            <button id="btnCopyNs2Script" class="btn btn-secondary btn-sm">📋 Copy Code</button>
+            <button id="btnDownloadNs2Script" class="btn btn-sm">📥 Download Script</button>
+          </div>
+        </div>
+
+        <!-- Code Box -->
+        <div class="code-box" id="ns2ScriptViewer"></div>
+
+        <!-- Interactive Custom Tcl Generator -->
+        <div class="card" style="background:rgba(14,23,54,0.6); margin-top:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; color:var(--cyan); margin-bottom:1rem;">Dynamic NS-2 Tcl Script Generator</h4>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:1rem; align-items:end;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ns2GenNodes">Intersection Nodes</label>
+              <input type="number" id="ns2GenNodes" class="form-input" min="4" max="10" value="8">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ns2GenBw">Link Bandwidth</label>
+              <select id="ns2GenBw" class="form-select">
+                <option value="5Mb">5 Mbps (Feeder)</option>
+                <option value="10Mb" selected>10 Mbps (Fiber)</option>
+                <option value="100Mb">100 Mbps (Gigabit)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ns2GenDelay">Link Propagation Delay</label>
+              <select id="ns2GenDelay" class="form-select">
+                <option value="2ms">2 ms (Ultra Low)</option>
+                <option value="5ms" selected>5 ms (Standard City)</option>
+                <option value="10ms">10 ms (Long Span)</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label" for="ns2GenQueue">Queue Capacity (pkts)</label>
+              <input type="number" id="ns2GenQueue" class="form-input" min="10" max="50" value="20">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <button id="btnGenerateCustomTcl" class="btn" style="width:100%; height:42px;">
+                <span>Generate Custom Script</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trace File Analyzer -->
+        <div class="card" style="background:rgba(14,23,54,0.6); margin-top:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; color:var(--emerald); margin-bottom:0.75rem;">Interactive Trace File (.tr) Analyzer</h4>
+          <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+            Upload your generated NS-2 trace file or evaluate the built-in sample trace <code>sample_output/traffic_sim.tr</code> to view parsed metrics.
+          </p>
+
+          <div style="display:flex; gap:1rem; flex-wrap:wrap; align-items:center;">
+            <input type="file" id="ns2TraceFileInput" accept=".tr,.txt" style="display:none;">
+            <button class="btn btn-secondary" onclick="document.getElementById('ns2TraceFileInput').click();">
+              📁 Choose Local .tr File
+            </button>
+            <button id="btnAnalyzeSampleTrace" class="btn">
+              ⚡ Evaluate Pre-generated Sample Trace
+            </button>
+          </div>
+
+          <div id="ns2TraceResults" style="display:none;"></div>
+        </div>
+
+        <!-- Execution Guide -->
+        <div style="margin-top:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; margin-bottom:0.75rem;">Terminal Commands for Linux & WSL 2 Execution</h4>
+          <div class="code-box" style="padding:1rem;">
+# 1. Run the Wired Smart City NS-2 simulation:
+ns traffic_smart_city_wired.tcl
+
+# 2. Open Network Animator (NAM) visual playback:
+nam sample_output/traffic_sim.nam &
+
+# 3. Analyze throughput, loss, and latency using AWK scripts:
+awk -f scripts/throughput.awk sample_output/traffic_sim.tr
+awk -f scripts/packet_loss.awk sample_output/traffic_sim.tr
+awk -f scripts/delay.awk sample_output/traffic_sim.tr
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 7: PROJECT DOCUMENTATION & VIVA GUIDE -->
+    <!-- ========================================================================= -->
+    <section id="tab-docs" class="tab-content" role="tabpanel">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><span class="icon">📚</span> Project Documentation, Viva Guide & Report</div>
+          <span class="tag-pill">BTech CNIP Demonstration</span>
+        </div>
+
+        <!-- Project Summary -->
+        <div class="callout" style="margin-bottom:1.5rem;">
+          <h3 style="font-size:1.1rem; color:#fff; margin-bottom:0.4rem;">Smart City Traffic Communication Network</h3>
+          <p style="font-size:0.88rem; color:#CBD5E1; line-height:1.6;">
+            A comprehensive Computer Networks & Internet Protocols (CNIP) project modeling intelligent vehicular communication and signal coordination across 8 smart intersections. Demonstrates shortest-path packet forwarding, distributed routing table convergence, traffic shaping, congestion analysis, and discrete-event NS-2 network simulation.
+          </p>
+        </div>
+
+        <!-- System Architecture & Flow Diagram -->
+        <div class="card" style="background:rgba(14,23,54,0.6); margin-bottom:1.5rem;">
+          <h4 style="font-size:1rem; font-weight:700; color:var(--cyan); margin-bottom:0.75rem;">System Architecture Diagram</h4>
+          <div class="code-box" style="line-height:1.4;">
++-----------------------------------------------------------------------------------+
+|                        SMART CITY ROAD INFRASTRUCTURE                             |
+|  [Vehicles with DSRC/802.11p OBU] <---> [Roadside Traffic Sensors & Cameras]     |
++-----------------------------------------------------------------------------------+
+                                    | (V2I Telemetry Packets)
+                                    v
++-----------------------------------------------------------------------------------+
+|                  NETWORK LAYER ROUTING & TRAFFIC CONTROL ENGINE                   |
+|                                                                                   |
+|  +-------------------------+  +--------------------------+  +------------------+  |
+|  | Dijkstra SPF Algorithm  |  | Distance Vector Routing  |  |   Leaky Bucket   |  |
+|  | Minimum Latency Routing |  |  (Bellman-Ford Tables)   |  |  Traffic Shaper  |  |
+|  +-------------------------+  +--------------------------+  +------------------+  |
++-----------------------------------------------------------------------------------+
+             |                                                  |
+             v                                                  v
++-----------------------------+                    +--------------------------------+
+|     JAVA BACKEND ENGINE     |                    |   NS-2 DISCRETE SIMULATION     |
+| - REST API (Port 8080)      |                    | - Tcl Topology Simulation      |
+| - Zero-Dependency Server    |                    | - DropTail Queue Analysis      |
+| - Mathematical Simulators   |                    | - AWK Performance Parsers      |
++-----------------------------+                    +--------------------------------+
+             |                                                  |
+             +-----------------------+  +-----------------------+
+                                     |  |
+                                     v  v
++-----------------------------------------------------------------------------------+
+|                        MODERN RESPONSIVE WEB DASHBOARD                            |
+|  - HTML5 Canvas Live Graph Topology      - Interactive Step-by-Step Trace Tables  |
+|  - Real-time High-DPI Metric Charts      - CSV Data Exporter & Trace Evaluator    |
++-----------------------------------------------------------------------------------+
+          </div>
+        </div>
+
+        <!-- Viva Questions & Answers -->
+        <h4 style="font-size:1.1rem; font-weight:700; margin-bottom:1rem; color:#fff;">Top 8 Viva Questions & Model Answers for CNIP Defense</h4>
+        
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q1: How does Dijkstra's algorithm work in this project?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> Dijkstra's algorithm is a greedy single-source shortest path algorithm. It maintains a tentative distance array initialized to infinity (0 for source) and a visited set. In each step, it picks the unvisited intersection with the minimum tentative distance, marks it visited, and relaxes all adjacent links. It runs in $O(V^2)$ with an adjacency matrix or $O((V+E)\log V)$ with a min-heap.
+            </p>
+          </div>
+
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q2: What is Distance Vector Routing and the Bellman-Ford equation?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> Distance Vector Routing is a distributed algorithm where each traffic router node periodically shares its routing table vector with direct physical neighbors. Paths are calculated using $D_x(y) = \min_v \{ c(x, v) + D_v(y) \}$, where $c(x,v)$ is the link cost from $x$ to neighbor $v$, and $D_v(y)$ is $v$'s cost to reach $y$.
+            </p>
+          </div>
+
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q3: How does the Leaky Bucket algorithm prevent network congestion?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> The Leaky Bucket turns a bursty, unpredictable packet stream into a smoothed Constant Bit Rate (CBR) stream. Incoming packets are enqueued into a finite buffer (the bucket). Packets leak out at a fixed rate $R$. If packets arrive when the bucket is full, they are dropped. This prevents router buffers in the city backbone from collapsing.
+            </p>
+          </div>
+
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q4: What is the difference between TCP and UDP in this traffic network?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> UDP (User Datagram Protocol) is connectionless, fast, and lightweight with no acknowledgment overhead, making it ideal for high-volume vehicle telemetry sensor feeds where occasional packet loss is tolerable. TCP (Transmission Control Protocol) is connection-oriented and reliable with three-way handshaking, retransmissions, and congestion control, used for critical emergency signals and traffic light state synchronization.
+            </p>
+          </div>
+
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q5: How do we calculate Packet Loss Rate, Throughput, and PDR in NS-2?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> Using AWK scripts on the <code>.tr</code> trace file:
+              <br>• Packet Loss Rate = $(\text{Dropped Packets } 'd' / \text{Enqueued Packets } '+') \times 100$
+              <br>• Throughput = $(\text{Received Bytes } 'r' \times 8) / (\text{Duration} \times 1000) \text{ kbps}$
+              <br>• Packet Delivery Ratio (PDR) = $(\text{Received Packets } 'r' / \text{Sent Packets } '+') \times 100$.
+            </p>
+          </div>
+
+          <div class="card" style="padding:1rem;">
+            <h5 style="color:var(--cyan); font-weight:700; font-size:0.95rem;">Q6: What causes network congestion collapse under extreme traffic?</h5>
+            <p style="font-size:0.85rem; color:#CBD5E1; margin-top:0.3rem;">
+              <strong>Answer:</strong> When arrival rate exceeds channel transmission capacity, packets accumulate in router buffers. Once the buffer hits capacity, subsequent packets are dropped (DropTail). Retransmissions by transport protocols like TCP further exacerbate the queue buildup, causing throughput to plummet while latency spikes exponentially.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer-bar">
+    <p>Smart City Traffic Communication Network • Computer Networks & Internet Protocols (CNIP) College Project</p>
+    <p style="margin-top:0.35rem; color:var(--text-dim);">Designed with Java, HTML5, CSS3, JavaScript, & NS-2 Network Simulator.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/network-canvas.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/dijkstra.js"></script>
+  <script src="js/distance-vector.js"></script>
+  <script src="js/leaky-bucket.js"></script>
+  <script src="js/congestion.js"></script>
+  <script src="js/traffic-agent.js"></script>
+  <script src="js/ns2-module.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

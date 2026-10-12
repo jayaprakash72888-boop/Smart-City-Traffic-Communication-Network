@@ -1,0 +1,33 @@
+# Network Animator (NAM) Trace File
+# Generated for Smart City Traffic Communication Network
+V -t * -v 1.0a5 -a 0
+W -t * -x 900 -y 500
+c -t * -i 1 -n Blue
+c -t * -i 2 -n Red
+c -t * -i 3 -n Green
+n -t * -s 0 -S UP -v circle -c black -i black
+n -t * -s 1 -S UP -v circle -c black -i black
+n -t * -s 2 -S UP -v circle -c black -i black
+n -t * -s 3 -S UP -v circle -c black -i black
+n -t * -s 4 -S UP -v circle -c black -i black
+n -t * -s 5 -S UP -v circle -c black -i black
+n -t * -s 6 -S UP -v circle -c black -i black
+n -t * -s 7 -S UP -v circle -c black -i black
+l -t * -s 0 -d 1 -S UP -r 10000000 -D 0.005 -c black -h 0.005
+l -t * -s 0 -d 4 -S UP -r 5000000 -D 0.008 -c black -h 0.008
+l -t * -s 0 -d 5 -S UP -r 10000000 -D 0.004 -c black -h 0.004
+l -t * -s 1 -d 2 -S UP -r 10000000 -D 0.006 -c black -h 0.006
+l -t * -s 1 -d 5 -S UP -r 10000000 -D 0.003 -c black -h 0.003
+l -t * -s 2 -d 6 -S UP -r 5000000 -D 0.007 -c black -h 0.007
+l -t * -s 2 -d 7 -S UP -r 10000000 -D 0.005 -c black -h 0.005
+l -t * -s 3 -d 4 -S UP -r 5000000 -D 0.009 -c black -h 0.009
+l -t * -s 3 -d 5 -S UP -r 10000000 -D 0.005 -c black -h 0.005
+l -t * -s 3 -d 6 -S UP -r 10000000 -D 0.004 -c black -h 0.004
+l -t * -s 5 -d 6 -S UP -r 10000000 -D 0.003 -c black -h 0.003
+l -t * -s 6 -d 7 -S UP -r 10000000 -D 0.004 -c black -h 0.004
+h -t 0.500000 -s 0 -d 5 -e 512 -a 1
+r -t 0.504096 -s 0 -d 5 -e 512 -a 1
+h -t 0.504096 -s 5 -d 6 -e 512 -a 1
+r -t 0.507192 -s 5 -d 6 -e 512 -a 1
+h -t 0.507192 -s 6 -d 7 -e 512 -a 1
+r -t 0.511288 -s 6 -d 7 -e 512 -a 1
