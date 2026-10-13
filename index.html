@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart City Traffic Communication Network</title>
+  <script>
+    // Immediate smart redirect based on session
+    const user = localStorage.getItem('smartcity_user') || sessionStorage.getItem('smartcity_user');
+    if (user) {
+      window.location.replace("frontend/index.html");
+    } else {
+      window.location.replace("frontend/login.html");
+    }
+  </script>
+  <meta http-equiv="refresh" content="0; url=frontend/login.html">
+</head>
+<body style="background:#0a0f24;color:#f0f4fc;font-family:system-ui,-apple-system,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;">
+  <div style="text-align:center;padding:2rem;">
+    <div style="font-size:3.5rem;margin-bottom:1rem;">🚦</div>
+    <h1 style="margin:0 0 0.5rem 0;color:#4cc9f0;font-size:1.75rem;">Smart City Traffic Communication Network</h1>
+    <p style="color:#94a3b8;margin:0 0 1.5rem 0;">Redirecting to Traffic Operations Portal...</p>
+    <a href="frontend/login.html" style="display:inline-block;padding:0.75rem 1.5rem;background:#4361ee;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Open Portal</a>
+  </div>
+</body>
+</html>
